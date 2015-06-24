@@ -1,0 +1,161 @@
+<?php get_header(); ?>
+
+
+
+  <?php if ( have_posts() ) : while  ( have_posts() ) : the_post();   ?>
+
+
+    <section id="heroSection" style="background-image: url('<?php the_field('main_image'); ?>'); ">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6 col-md-offset-3">
+            <div id="titleSection">
+              <h1><?php the_title(); ?></h1>
+              <h2><?php the_field('company_name'); ?></h2>
+              <h3><?php the_field('salary'); ?> | <?php the_field('location'); ?></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section> 
+
+    <section id="mainAdvertSection">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 col-md-offset-2">
+            <?php            
+              if(get_field('job_description'))
+              {   
+                echo '<div class="sectionArea textDesc">' . '<h3>Description</h3>' . get_field('job_description') . '</div>';
+              }    
+            
+
+            
+              if(get_field('image_block'))
+              {   
+                echo '<div class="sectionArea imageBox" style="background-image: url(' . get_field('image_block') . ');">' . '</div>';
+              }    
+           
+
+
+              if(get_field('key_skills_-_left'))
+              {   
+                echo '<div class="sectionArea keySkills">
+                        <h3>Key Skills</h3>
+                          <div class="row">' .
+                          '<div class="col-md-6" id="leftSkills">' .
+                            get_field('key_skills_-_left') .
+                          '</div>' .
+                        '<div class="col-md-6">' .
+                            get_field('key_skills_-_Right') .
+                        '</div>
+                        </div>
+                      </div>';
+              }
+            
+            
+            ?>             
+      
+            <div class="sectionArea formBox">
+              <h3>Apply</h3>              
+              <form method="post" action="<?php the_permalink(); ?>" enctype="multipart/form-data">
+                <div class="form-group">
+                  <label for="name">Name*: </label>
+                  <input type="text" class="form-control" name="name" id="name" required>
+                </div>
+                  
+                <div class="form-group">
+                  <label for="email">Email*: </label>
+                  <input type="email" class="form-control" name="email" id="email" required> 
+                </div>  
+
+                <div class="form-group">
+                  <label for="phone">Tel: </label>
+                  <input type="tel" class="form-control" name="phone" id="phone" required>                   
+                </div>
+
+                <div style="display:none;">
+                  <label for="address">Address: </label>
+                  <input type="text" name="address" id="address">     
+                  <p>Humans! Please leave this field blank.</p>
+                </div>
+
+                <div class="form-group">                
+                  <label for="coverLetter">Cover Letter:</label>
+                  <textarea name="coverLetter" class="form-control" id="coverLetter" rows="6" required></textarea>
+                </div>
+
+                  <label>Upload Your CV:</label>         
+                  <input name="data" type="file" class="data">
+
+                <button type="submit" class="btn btn-block btn-carefor" id="applicationSend">Send</button>
+
+              </form>            
+            </div>
+            
+            
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+  <?php 
+  
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+      $toEmail = get_field('email_address_for_applications');
+      $name = $_POST["name"];
+      $email = $_POST["email"];
+      $tel = $_POST["phone"];
+      $cover_letter = $_POST["coverLetter"];
+      $job_title = get_the_title();
+      
+
+      $subject = "Application for " . $job_title  . " - " . $name;
+      
+      $message = "Congratulations! A new applicant." . "\n" . "\n" . "Applicant name: " . $name . "\n" . "\n" . "Applicant email: " . $email . "\n" . "\n" . "Applicant Tel: " . $tel. "\n" . "\n" . "Cover Letter: " . "\n" . $cover_letter;
+      
+      if ( ! function_exists( 'wp_handle_upload' ) ) {
+          require_once( ABSPATH . 'wp-admin/includes/file.php' );
+      }
+
+      $uploadedfile = $_FILES['data'];
+      $filename = $_FILES['data']['name'];
+
+      $upload_overrides = array( 'test_form' => false );
+
+      $movefile = wp_handle_upload( $uploadedfile, $upload_overrides );
+
+      if ( $movefile && !isset( $movefile['error'] ) ) {
+        /*  echo "File is valid, and was successfully uploaded.\n";
+          var_dump( $movefile); */
+      } else {
+          /**
+           * Error generated by _wp_handle_upload()
+           * @see _wp_handle_upload() in wp-admin/includes/file.php
+           */
+          //echo $movefile['error'];
+      }      
+      
+      $headers[] = 'From: Ben at carefor.co <applications@carefor.co>';
+      $headers[] = 'Bcc: lattimoreben@hotmail.com'; // note you can just use a simple email address
+
+                
+
+      $attachments = array( WP_CONTENT_DIR . '/uploads/' . $filename);
+      
+      wp_mail($toEmail, $subject, $message, $headers, $attachments);     
+    }
+
+  ?>
+
+  <?php endwhile; else: ?>
+
+
+      <p>Ooops! Something went wrong.</p>
+
+  <?php endif; ?>
+
+
+<?php get_footer(); ?>
